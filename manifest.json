@@ -1,0 +1,22 @@
+{
+  "name": "Daily Timebox Planner",
+  "short_name": "Timebox",
+  "description": "Lee Seung Min Daily Planner",
+  "start_url": "/timebox-planner/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192/1a1a2e/f5f0e8?text=T",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512/1a1a2e/f5f0e8?text=T",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

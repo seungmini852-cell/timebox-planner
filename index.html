@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Daily Timebox Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Timebox">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f0e8;
+    --card: #fffdf7;
+    --accent: #1a1a2e;
+    --accent2: #c84b31;
+    --muted: #8a7f72;
+    --border: #d6cfc3;
+    --time-text: #f5f0e8;
+  }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  .header {
+    background: var(--accent);
+    color: var(--time-text);
+    padding: 18px 20px 14px;
+    text-align: center;
+  }
+  .header-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: #a0a0c0;
+    margin-top: 2px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .sync-bar {
+    background: #0f3460;
+    color: #a0c4ff;
+    text-align: center;
+    font-size: 11px;
+    padding: 5px;
+    letter-spacing: 1px;
+  }
+  .sync-bar.synced { background: #1b4332; color: #95d5b2; }
+  .sync-bar.error { background: #7f1d1d; color: #fca5a5; }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--accent2);
+    padding: 10px 20px;
+  }
+  .date-nav button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+  .date-nav button:active { background: rgba(255,255,255,0.2); }
+  .date-display {
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .content {
+    padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    margin-top: 18px;
+  }
+
+  .priority-list { display: flex; flex-direction: column; gap: 8px; }
+  .priority-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+  }
+  .priority-item:focus-within { border-color: var(--accent2); }
+  .priority-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    color: var(--accent2);
+    min-width: 22px;
+  }
+  .priority-input {
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--accent);
+    width: 100%;
+    outline: none;
+  }
+  .priority-input::placeholder { color: #c0b8ad; }
+
+  .brain-dump {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    width: 100%;
+    min-height: 90px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--accent);
+    resize: vertical;
+    outline: none;
+    line-height: 1.7;
+    transition: border-color 0.2s;
+  }
+  .brain-dump:focus { border-color: var(--accent2); }
+  .brain-dump::placeholder { color: #c0b8ad; }
+
+  .timebox-table {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .time-header {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .time-header > div { padding: 10px 8px; text-align: center; }
+  .time-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 1fr;
+    border-top: 1px solid var(--border);
+  }
+  .time-row:hover { background: #faf7f0; }
+  .time-label {
+    background: var(--accent);
+    color: var(--time-text);
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+  }
+  .time-cell { border-left: 1px solid var(--border); }
+  .time-cell input {
+    width: 100%;
+    min-height: 40px;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--accent);
+    padding: 8px 10px;
+    outline: none;
+  }
+  .time-cell input::placeholder { color: #d0c8bc; font-size: 12px; }
+  .time-cell input:focus { background: #fff9ee; }
+
+  .save-btn {
+    width: 100%;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    padding: 15px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .save-btn:active { background: var(--accent2); transform: scale(0.98); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .mb-16 { margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Daily Timebox Planner</div>
+  <div class="header-sub">Lee Seung Min · 2026</div>
+</div>
+
+<div class="sync-bar" id="syncBar">⏳ Firebase 연결 중...</div>
+
+<div class="date-nav">
+  <button onclick="changeDate(-1)">‹</button>
+  <div class="date-display" id="dateDisplay"></div>
+  <button onclick="changeDate(1)">›</button>
+</div>
+
+<div class="content">
+  <div class="section-label">Top Priorities</div>
+  <div class="priority-list mb-16">
+    <div class="priority-item">
+      <span class="priority-num">1</span>
+      <input class="priority-input" id="p1" type="text" placeholder="오늘 가장 중요한 일">
+    </div>
+    <div class="priority-item">
+      <span class="priority-num">2</span>
+      <input class="priority-input" id="p2" type="text" placeholder="두 번째 우선순위">
+    </div>
+    <div class="priority-item">
+      <span class="priority-num">3</span>
+      <input class="priority-input" id="p3" type="text" placeholder="세 번째 우선순위">
+    </div>
+  </div>
+
+  <div class="section-label">Brain Dump</div>
+  <textarea class="brain-dump mb-16" id="brainDump" placeholder="머릿속에 있는 것들 다 적어두기..."></textarea>
+
+  <div class="section-label">Time Schedule</div>
+  <div class="timebox-table mb-16">
+    <div class="time-header">
+      <div></div>
+      <div>:00</div>
+      <div>:30</div>
+    </div>
+    <div id="timeRows"></div>
+  </div>
+
+  <button class="save-btn" onclick="saveData()">☁️ 저장 및 동기화</button>
+</div>
+
+<div class="toast" id="toast">☁️ 클라우드에 저장됐어요!</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBr8j9kwm5SgxueTd6t-ZZlRlVuydyY5Q8",
+    authDomain: "timebox-planner-1201e.firebaseapp.com",
+    projectId: "timebox-planner-1201e",
+    storageBucket: "timebox-planner-1201e.firebasestorage.app",
+    messagingSenderId: "78869759500",
+    appId: "1:78869759500:web:1b1243f45114790d00d029"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const hours = [6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+  let currentDate = new Date();
+
+  function formatDate(d) {
+    const days = ['일','월','화','수','목','금','토'];
+    return `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  }
+
+  function getDateKey(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function buildTimeRows() {
+    const container = document.getElementById('timeRows');
+    container.innerHTML = '';
+    hours.forEach(h => {
+      const row = document.createElement('div');
+      row.className = 'time-row';
+      row.innerHTML = `
+        <div class="time-label">${h}</div>
+        <div class="time-cell"><input type="text" id="t${h}_00" placeholder="할 일 입력"></div>
+        <div class="time-cell"><input type="text" id="t${h}_30" placeholder=""></div>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  function setSyncStatus(status) {
+    const bar = document.getElementById('syncBar');
+    if (status === 'synced') {
+      bar.textContent = '✅ 클라우드 연결됨 — 컴퓨터·폰 동기화 중';
+      bar.className = 'sync-bar synced';
+    } else if (status === 'error') {
+      bar.textContent = '❌ 연결 실패 — 인터넷 확인해줘';
+      bar.className = 'sync-bar error';
+    } else {
+      bar.textContent = '⏳ 동기화 중...';
+      bar.className = 'sync-bar';
+    }
+  }
+
+  async function loadData() {
+    clearFields();
+    try {
+      const snap = await getDoc(doc(db, 'planner', getDateKey(currentDate)));
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById('p1').value = data.p1 || '';
+        document.getElementById('p2').value = data.p2 || '';
+        document.getElementById('p3').value = data.p3 || '';
+        document.getElementById('brainDump').value = data.brainDump || '';
+        hours.forEach(h => {
+          const el00 = document.getElementById(`t${h}_00`);
+          const el30 = document.getElementById(`t${h}_30`);
+          if (el00) el00.value = (data.times && data.times[`${h}_00`]) || '';
+          if (el30) el30.value = (data.times && data.times[`${h}_30`]) || '';
+        });
+      }
+      setSyncStatus('synced');
+    } catch (e) {
+      setSyncStatus('error');
+    }
+  }
+
+  function clearFields() {
+    ['p1','p2','p3','brainDump'].forEach(id => document.getElementById(id).value = '');
+    hours.forEach(h => {
+      const el00 = document.getElementById(`t${h}_00`);
+      const el30 = document.getElementById(`t${h}_30`);
+      if (el00) el00.value = '';
+      if (el30) el30.value = '';
+    });
+  }
+
+  async function saveData() {
+    const times = {};
+    hours.forEach(h => {
+      times[`${h}_00`] = document.getElementById(`t${h}_00`)?.value || '';
+      times[`${h}_30`] = document.getElementById(`t${h}_30`)?.value || '';
+    });
+    try {
+      await setDoc(doc(db, 'planner', getDateKey(currentDate)), {
+        p1: document.getElementById('p1').value,
+        p2: document.getElementById('p2').value,
+        p3: document.getElementById('p3').value,
+        brainDump: document.getElementById('brainDump').value,
+        times,
+        updatedAt: new Date().toISOString()
+      });
+      showToast();
+      setSyncStatus('synced');
+    } catch (e) {
+      setSyncStatus('error');
+    }
+  }
+
+  async function changeDate(delta) {
+    await saveData();
+    currentDate.setDate(currentDate.getDate() + delta);
+    document.getElementById('dateDisplay').textContent = formatDate(currentDate);
+    await loadData();
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  window.saveData = saveData;
+  window.changeDate = changeDate;
+
+  // PWA 서비스워커 등록
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+
+  buildTimeRows();
+  document.getElementById('dateDisplay').textContent = formatDate(currentDate);
+  loadData();
+</script>
+</body>
+</html>
